@@ -19,22 +19,6 @@
               [:body
                content]))
 
-(defpage "/woot3" []
-         (main-layout
-           [:p "holy shit this thing is working."]
-           [:p "I mean totally working"]))
-
-(defpage "/woot" []
-         (main-layout
-           [:p "holy shit this thing is working."]
-           [:p "I mean totally working"]))
-
-(defpage "/yar" []
-         (println server/final-routes)
-         (main-layout
-           (link-to "/woot" "go back to woot")
-           [:p "Like seriously working."]))
-
 (defpage "/image" []
          (main-layout
            (image "/img/woot.png" "woot")))
@@ -52,6 +36,9 @@
          (main-layout
            [:h2 "You posted something:"]
            [:p hey]))
+
+(defpage "/render" []
+         (render "/params" {:hey "how are you?"}))
 
 (defpage "/json/:name" {n :name}
          (resp/json
@@ -103,9 +90,9 @@
            [:p "How about your name? " (or (vali/errors? :username) 
                                            "Well, it appears to be the appropriate length.")]))
 
-;; (error-page! 404
-;;           (main-layout
-;;             [:p "We couldn't find what you were looking for!"]))
+ (server/set-error! 404
+           (main-layout
+             [:p "We couldn't find what you were looking for!"]))
 
 (defn -main [& m]
   (let [mode (or (first m) :dev)]
