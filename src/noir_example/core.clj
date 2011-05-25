@@ -38,7 +38,7 @@
            [:p hey]))
 
 (defpage "/render" []
-         (render "/params" {:hey "how are you?"}))
+         (render [:post "/params"] {:hey "how are you?"}))
 
 (defpage "/json/:name" {n :name}
          (resp/json
