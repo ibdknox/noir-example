@@ -9,6 +9,7 @@
             [noir.content.pages :as pages]
             [noir.cookies :as cookie]
             [noir.validation :as vali]
+            [noir.statuses :as statuses]
             [noir.response :as resp]
             [noir.session :as session]))
 
@@ -18,6 +19,28 @@
                [:title "Awesome"]]
               [:body
                content]))
+
+(pre-route "/admin/*" {}
+           (when-not (session/get :admin)
+             (resp/redirect "/login")))
+
+(defpage "/admin/" {}
+         (main-layout
+           [:p "Admin section things"]))
+
+(defpage "/middleware" {m1 :m1 m2 :m2}
+         (main-layout
+           [:p "You added middleware! " m1 " :: " m2]))
+
+(defpage "/logout" {}
+         (session/remove! :admin)
+         (resp/redirect "/"))
+
+(defpage "/login" {}
+         (session/put! :admin true)
+         (main-layout
+           [:p "you are now logged in"]
+           (link-to "/admin/" "Go to the admin section")))
 
 (defpage "/image" []
          (main-layout
@@ -37,8 +60,8 @@
            [:h2 "You posted something:"]
            [:p hey]))
 
-(defpage "/render" []
-         (render [:post "/params"] {:hey "how are you?"}))
+(defpage "/render" {:as params}
+         (render [:post "/params"] {:hey "what's up?"}))
 
 (defpage "/json/:name" {n :name}
          (resp/json
@@ -90,13 +113,22 @@
            [:p "How about your name? " (or (vali/errors? :username) 
                                            "Well, it appears to be the appropriate length.")]))
 
- (server/set-error! 404
-           (main-layout
-             [:p "We couldn't find what you were looking for!"]))
+(statuses/set-page! 400
+                    (main-layout
+                      [:p "We couldn't find what you were looking for!"]))
+
+(defn wrap-key [handler k v]
+  (fn [request]
+    (let [neue (assoc-in request [:params k] v)]
+      (handler neue))))
+
+(server/add-middleware wrap-key :m1 "middleware 1 added this")
+(server/add-middleware wrap-key :m2 "middleware 2 added this")
 
 (defn -main [& m]
-  (let [mode (or (first m) :dev)]
-    (server/start 8080 {:mode (keyword mode)
-                        :ns 'noir-example})))
+  (let [mode (or (first m) :dev)
+        port (Integer/parseInt (get (System/getenv) "PORT" "8080"))]
+    (server/start port {:mode (keyword mode)
+                        :ns 'noir})))
 
 
